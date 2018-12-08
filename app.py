@@ -28,7 +28,7 @@ class capture_thread():
         self.files_list = [f for f in listdir(self.OUTPUT_DIR) if isfile(join(self.OUTPUT_DIR, f))]
 
         self.services = {}
-        self.ignored_ports = [80, 443]
+        self.ignored_ports = []#[80, 443]
         with open('services.csv') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
