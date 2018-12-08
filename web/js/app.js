@@ -42,13 +42,13 @@ $(document).ready(function () {
 
         if (alert.indexOf("443") >= 0) {
             https_count += 1;
-            https_display.innerHTML = https_count;
+            https_display.innerHTML = "<b>"+https_count+"</b>";
         } else if (alert.indexOf("80") >= 0) {
             http_count += 1;
-            http_display.innerHTML = http_count;
+            http_display.innerHTML = "<b>"+http_count+"</b>";
         } else {
             other_count += 1;
-            other_display.innerHTML = other_count;
+            other_display.innerHTML = "<b>"+other_count+"</b>";
         }
     }
 
@@ -57,6 +57,6 @@ $(document).ready(function () {
     function update_capfiles(number) {
         capfiles_display.innerHTML = "<big><big>" + number + "</big></big>";
         capfiles_display2.innerHTML = number;
-        capfiles_displaybig.innerHTML = number;
+        capfiles_displaybig.innerHTML = "<b>"+number+"</b>";
     }
 });

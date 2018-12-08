@@ -136,7 +136,7 @@ class capture_thread():
             output = self.print_payload(packet)
             tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
             rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
-            eel.add_to_table(type_name+" "+desc, tx, rx , output)
+            eel.add_to_table(str(port)+": "+type_name+" "+desc, tx, rx , output)
             return True
         else:
             return False
