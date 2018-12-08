@@ -1,6 +1,6 @@
 # endgame [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-![main screen](images/main.jpg)
+![main screen](images/main2.jpg)
 
 ### Packet Capture + Interpretation
 
