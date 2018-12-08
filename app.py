@@ -169,13 +169,13 @@ class capture_thread():
                     if packet[TCP].payload:
                         data_packet = str(packet[TCP].payload)
                         if 'PUT' in data_packet or 'POST' in data_packet:
-                            output = self.print_payload(packet, 1000)
+                            output = self.print_payload(packet, 2000)
                             tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
                             rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
                             eel.add_to_table("PUT/POST Request", tx, rx , output)
 
                         elif 'admin' in data_packet.lower() or 'login' in data_packet.lower() or 'passw' in data_packet.lower():
-                            output = self.print_payload(packet, 1000)
+                            output = self.print_payload(packet, 2000)
                             tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
                             rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
                             eel.add_to_table("Possible Credentials", tx, rx , output)
