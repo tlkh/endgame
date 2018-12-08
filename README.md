@@ -18,3 +18,13 @@
 TODO
 ```
 
+### Dependencies
+
+**Python**
+
+* `pip3 install -r requirements.txt`
+
+**Linux**
+
+* tshark
+
