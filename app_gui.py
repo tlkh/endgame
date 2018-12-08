@@ -155,7 +155,7 @@ class capture_thread():
                     to_print = payload[:cutoff]+"..."
         except Exception as e:
             to_print = str(e)
-        return to_print+
+        return to_print
 
     def stop(self):
         self.stopped = True
@@ -194,7 +194,5 @@ class capture_thread():
 capture = capture_thread("ens33")
 
 capture.start()
-
-print("SUPPPPP")
 
 eel.start('index.html') # blocking
