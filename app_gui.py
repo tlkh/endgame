@@ -14,6 +14,7 @@ from libnmap.objects.os import NmapOSClass
 from scapy.all import *
 
 import eel
+
 eel.init('web')
 
 class capture_thread():
@@ -32,15 +33,10 @@ class capture_thread():
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
             for row in csv_reader:
-                if line_count == 0:
-                    # port, service, desc
-                    print(f'Column names are {", ".join(row)}')
-                    line_count += 1
-                else:
-                    port, service, desc = row
-                    port = int(port)
-                    if port not in self.ignored_ports:
-                        self.services[str(port)] = [service, desc]
+                port, service, desc = row
+                port = int(port)
+                if port not in self.ignored_ports:
+                    self.services[str(port)] = [service, desc]
             print(f'Processed {line_count} lines.')
 
     def start(self):
@@ -137,23 +133,29 @@ class capture_thread():
             print('[*] TX:', packet[IP].src, self.fingerprint_hostname(packet[IP].src))
             print('[*] RX:', packet[IP].dst, self.fingerprint_hostname(packet[IP].dst))
             output = self.print_payload(packet)
-            eel.add_to_table(type_name+" "+desc, packet[IP].src, packet[IP].dst, output)
+
+            tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
+            rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
+            eel.add_to_table(type_name+" "+desc, tx, rx , output)
+
             return True
         else:
             return False
 
-    def print_payload(self, packet, cutoff="600"):
-        payload = str(packet[TCP].payload)
-        if "Content-Type: application/javascript" in payload:
-            to_print = "JavaScript File: "+payload[:100]
-        elif "Content-Type: text/html" in payload:
-            to_print = "HTML File: "+payload[:100]
-        else:
-            if len(payload) < cutoff:
-                to_print = payload
+    def print_payload(self, packet, cutoff=600):
+        payload = str(packet[TCP].payload)[1:-1]
+        try:
+            if "Content-Type: application/javascript" in payload:
+                to_print = "JavaScript File: "+payload[:100]
+            elif "Content-Type: text/html" in payload:
+                to_print = "HTML File: "+payload[:100]
             else:
-                to_print = payload[:cutoff]
-        
+                if len(payload) < cutoff:
+                    to_print = payload
+                else:
+                    to_print = payload[:cutoff]
+        except Exception as e:
+            to_print = str(e)
         return to_print
 
     def stop(self):
@@ -169,17 +171,21 @@ class capture_thread():
                         data_packet = str(packet[TCP].payload)
                         if 'PUT' in data_packet or 'POST' in data_packet:
                             print('\n\n\n[*] PUT/POST Request')
-                            print('[*] TX:', packet[IP].src, fingerprint_hostname(packet[IP].src))
-                            print('[*] RX:', packet[IP].dst, fingerprint_hostname(packet[IP].dst))
+                            print('[*] TX:', packet[IP].src, self.fingerprint_hostname(packet[IP].src))
+                            print('[*] RX:', packet[IP].dst, self.fingerprint_hostname(packet[IP].dst))
                             output = self.print_payload(packet, 1000)
-                            eel.add_to_table("PUT/POST Request", packet[IP].src, packet[IP].dst, output)
+                            tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
+                            rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
+                            eel.add_to_table("PUT/POST Request", tx, rx , output)
 
                         elif 'admin' in data_packet.lower() or 'login' in data_packet.lower() or 'passw' in data_packet.lower():
                             print('\n\n\n[*] Possible Credentials')
-                            print('[*] TX:', packet[IP].src, fingerprint_hostname(packet[IP].src))
-                            print('[*] RX:', packet[IP].dst, fingerprint_hostname(packet[IP].dst))
+                            print('[*] TX:', packet[IP].src, self.fingerprint_hostname(packet[IP].src))
+                            print('[*] RX:', packet[IP].dst, self.fingerprint_hostname(packet[IP].dst))
                             output = self.print_payload(packet, 1000)
-                            eel.add_to_table("Possible Credentials", packet[IP].src, packet[IP].dst, output)
+                            tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
+                            rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
+                            eel.add_to_table("Possible Credentials", tx, rx , output)
 
                         self.check_traffic(packet, 102, "Siemens OT")
                         self.check_traffic(packet, 502, "Modbus OT")
@@ -187,12 +193,16 @@ class capture_thread():
                         self.check_traffic(packet, 44818, "CIP", "Common Industrial Protocol")
 
                         for port in self.services:
-                            if self.check_traffic(packet, port, services[port][0], services[port][1]):
+                            if self.check_traffic(packet, port, self.services[port][0], self.services[port][1]):
                                 break
                     
                 except Exception as e:
                     print('[ERROR *]', e)
 
-capture = capture_thread("ens33").start()
+capture = capture_thread("ens33")
+
+capture.start()
+
+print("SUPPPPP")
 
 eel.start('index.html') # blocking

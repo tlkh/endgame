@@ -27,13 +27,13 @@ $(document).ready(function () {
     eel.expose(add_to_table);
 
     function add_to_table(alert, tx, rx, packet) {
+        packet_add = "<span style='font-size:0.8em;width:500px;display:block;word-wrap:break-word;'>"+packet+"</span>"
         console.log("Populating table...")
         devicetable.row.add([
             alert,
             tx,
             rx,
-            packet
+            packet_add,
         ]).draw(false);
-        console.log("splitting ports");
     }
 });
