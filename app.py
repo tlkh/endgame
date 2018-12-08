@@ -7,6 +7,8 @@ import os
 from os import listdir
 from os.path import isfile, join
 
+from geolite2 import geolite2
+
 from libnmap.process import NmapProcess
 from libnmap.parser import NmapParser
 from libnmap.objects.os import NmapOSClass
@@ -26,6 +28,7 @@ class capture_thread():
         self.stopped = False
         self.old_files_list = []
         self.files_list = [f for f in listdir(self.OUTPUT_DIR) if isfile(join(self.OUTPUT_DIR, f))]
+        self.reader = geolite2.reader()
 
         self.services = {}
         self.ignored_ports = []#[80, 443]
@@ -64,7 +67,7 @@ class capture_thread():
         self.run_bash("touch "+pcap_name)
         self.run_bash("chmod 777 "+pcap_name)
         self.run_bash("chmod 777 -R ./output")
-        self.run_bash_timeout("sudo tshark -i "+self.iface+" -w " + pcap_name, 4)
+        self.run_bash_timeout("sudo tshark -i "+self.iface+" -w " + pcap_name, 3)
 
         print("Ended capture...")
 
@@ -105,6 +108,10 @@ class capture_thread():
 
     @functools.lru_cache(maxsize=256, typed=True)
     def fingerprint_hostname(self, hostname):
+        try:
+            country = self.reader.get(hostname)['country']['names']['en']
+        except:
+            country = "LAN"
         if hostname[:3]=="192":
             nmproc = NmapProcess(targets=hostname, options="-O")
             rc=nmproc.run()
@@ -126,9 +133,9 @@ class capture_thread():
                 services.append(str(serv.port) + "/" + str(serv.service))
                 #print("Open ports:", services)
 
-            return [fingerprint, services]
+            return [fingerprint, services, country]
         else:
-            return ["external", "unknown"]
+            return ["external", "unknown", country]
 
     def check_traffic(self, packet, port, type_name, desc=""):
         port = int(port)
