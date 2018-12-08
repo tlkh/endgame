@@ -57,7 +57,7 @@ class capture_thread():
     def run_event_loop(self):
         self.old_files_list = self.files_list.copy()
 
-        pcap_name = str(time.time())+".pcap"
+        pcap_name = "./pcap/"+str(time.time())+".pcap"
         print("pcap_name:", pcap_name)
         print("Starting capture...")
 
@@ -75,7 +75,7 @@ class capture_thread():
 
         self.files_list = [f for f in listdir(self.OUTPUT_DIR) if isfile(join(self.OUTPUT_DIR, f))]
         if len(self.old_files_list) != len(self.files_list):
-            print("[**] New objects!")
+            eel.update_capfiles(len(self.files_list))
 
         print("Done exporting objects...")
 
@@ -129,15 +129,10 @@ class capture_thread():
     def check_traffic(self, packet, port, type_name, desc=""):
         port = int(port)
         if packet[TCP].dport == port or packet[TCP].sport == port:
-            print("\n\n\n[*] "+type_name, desc)
-            print('[*] TX:', packet[IP].src, self.fingerprint_hostname(packet[IP].src))
-            print('[*] RX:', packet[IP].dst, self.fingerprint_hostname(packet[IP].dst))
             output = self.print_payload(packet)
-
             tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
             rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
             eel.add_to_table(type_name+" "+desc, tx, rx , output)
-
             return True
         else:
             return False
@@ -146,9 +141,9 @@ class capture_thread():
         payload = str(packet[TCP].payload)[1:-1]
         try:
             if "Content-Type: application/javascript" in payload:
-                to_print = "JavaScript File: "+payload[:100]
+                to_print = "JavaScript File: "+payload[:200]
             elif "Content-Type: text/html" in payload:
-                to_print = "HTML File: "+payload[:100]
+                to_print = "HTML File: "+payload[:200]
             else:
                 if len(payload) < cutoff:
                     to_print = payload
@@ -170,18 +165,12 @@ class capture_thread():
                     if packet[TCP].payload:
                         data_packet = str(packet[TCP].payload)
                         if 'PUT' in data_packet or 'POST' in data_packet:
-                            print('\n\n\n[*] PUT/POST Request')
-                            print('[*] TX:', packet[IP].src, self.fingerprint_hostname(packet[IP].src))
-                            print('[*] RX:', packet[IP].dst, self.fingerprint_hostname(packet[IP].dst))
                             output = self.print_payload(packet, 1000)
                             tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
                             rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
                             eel.add_to_table("PUT/POST Request", tx, rx , output)
 
                         elif 'admin' in data_packet.lower() or 'login' in data_packet.lower() or 'passw' in data_packet.lower():
-                            print('\n\n\n[*] Possible Credentials')
-                            print('[*] TX:', packet[IP].src, self.fingerprint_hostname(packet[IP].src))
-                            print('[*] RX:', packet[IP].dst, self.fingerprint_hostname(packet[IP].dst))
                             output = self.print_payload(packet, 1000)
                             tx = str(packet[IP].dst) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].dst)) + "</small>"
                             rx = str(packet[IP].src) +"<br><small>" + str(self.fingerprint_hostname(packet[IP].src)) + "</small>"
@@ -189,12 +178,11 @@ class capture_thread():
 
                         self.check_traffic(packet, 102, "Siemens OT")
                         self.check_traffic(packet, 502, "Modbus OT")
-                        self.check_traffic(packet, 1883, "MQTT")
+                        self.check_traffic(packet, 1883, "MQTT", "Message Queue Transport Protocol")
                         self.check_traffic(packet, 44818, "CIP", "Common Industrial Protocol")
 
                         for port in self.services:
-                            if self.check_traffic(packet, port, self.services[port][0], self.services[port][1]):
-                                break
+                            self.check_traffic(packet, port, self.services[port][0], self.services[port][1])
                     
                 except Exception as e:
                     print('[ERROR *]', e)

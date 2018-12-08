@@ -2,4 +2,4 @@
 *.pcap
 output/*
 *.txt
-
+pcap/*
