@@ -9,6 +9,10 @@ html {
   min-height: 100%;
 }
 
+#dataTable > thead > tr > th:nth-child(1) {
+  width: 1px;
+}
+
 body {
   height: 100%;
 }

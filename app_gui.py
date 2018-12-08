@@ -64,14 +64,14 @@ class capture_thread():
         self.run_bash("touch "+pcap_name)
         self.run_bash("chmod 777 "+pcap_name)
         self.run_bash("chmod 777 -R ./output")
-        self.run_bash_timeout("sudo tshark -i "+self.iface+" -w " + pcap_name, 10)
+        self.run_bash_timeout("sudo tshark -i "+self.iface+" -w " + pcap_name, 4)
 
         print("Ended capture...")
 
         print("Exporting objects...")
-        self.run_bash("sudo tshark -r " + pcap_name + " --export-objects http,./output/")
-        self.run_bash("sudo tshark -r " + pcap_name + " --export-objects smb,./output/")
-        self.run_bash("sudo tshark -r " + pcap_name + " --export-objects tftp,./output/")
+        self.run_bash_nonblock("sudo tshark -r " + pcap_name + " --export-objects http,./output/")
+        self.run_bash_nonblock("sudo tshark -r " + pcap_name + " --export-objects smb,./output/")
+        self.run_bash_nonblock("sudo tshark -r " + pcap_name + " --export-objects tftp,./output/")
 
         self.files_list = [f for f in listdir(self.OUTPUT_DIR) if isfile(join(self.OUTPUT_DIR, f))]
         if len(self.old_files_list) != len(self.files_list):
@@ -88,6 +88,10 @@ class capture_thread():
             process.wait()
             output, error = process.communicate()
         return output
+
+    def run_bash_nonblock(self, bash_command):
+        with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
+            process = subprocess.Popen(bash_command.split(), stdout=out,stderr=err)
 
     def run_bash_timeout(self, bash_command, timeout=False):
         process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE, preexec_fn=os.setsid)
@@ -141,17 +145,17 @@ class capture_thread():
         payload = str(packet[TCP].payload)[1:-1]
         try:
             if "Content-Type: application/javascript" in payload:
-                to_print = "JavaScript File: "+payload[:200]
+                to_print = "JavaScript File: "+payload[:200]+"..."
             elif "Content-Type: text/html" in payload:
-                to_print = "HTML File: "+payload[:200]
+                to_print = "HTML File: "+payload[:200]+"..."
             else:
                 if len(payload) < cutoff:
                     to_print = payload
                 else:
-                    to_print = payload[:cutoff]
+                    to_print = payload[:cutoff]+"..."
         except Exception as e:
             to_print = str(e)
-        return to_print
+        return to_print+
 
     def stop(self):
         self.stopped = True
