@@ -14,9 +14,7 @@
 
 ### Motivation
 
-```
-TODO
-```
+Well we really wanted a nice GUI to visualise network traffic, but specific enough for us to see the actual contents.
 
 ### Dependencies
 
@@ -26,5 +24,6 @@ TODO
 
 **Linux**
 
+* python3-dev
 * tshark
 
